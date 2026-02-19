@@ -1,0 +1,78 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Skill Analysis Contract",
+    "description": "Shared contract between Next.js (Client) and Python (Service)",
+    "type": "object",
+    "properties": {
+        "request": {
+            "type": "object",
+            "required": [
+                "skillId",
+                "name",
+                "level",
+                "tags"
+            ],
+            "properties": {
+                "skillId": {
+                    "type": "string",
+                    "format": "uuid"
+                },
+                "userId": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "level": {
+                    "type": "string",
+                    "enum": [
+                        "Beginner",
+                        "Intermediate",
+                        "Advanced",
+                        "Expert"
+                    ]
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "description": {
+                    "type": "string"
+                }
+            }
+        },
+        "response": {
+            "type": "object",
+            "required": [
+                "skillId",
+                "insights",
+                "score",
+                "recommendations"
+            ],
+            "properties": {
+                "skillId": {
+                    "type": "string"
+                },
+                "executionTimeMs": {
+                    "type": "integer"
+                },
+                "insights": {
+                    "type": "string"
+                },
+                "score": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 100
+                },
+                "recommendations": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        }
+    }
+}
