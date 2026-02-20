@@ -117,10 +117,10 @@ def _update_contribution_snapshot(
             db.table("ugie_repositories")
             .select("user_id")
             .eq("id", repo_id)
-            .single()
+            .maybe_single()
             .execute()
         )
-        if not repo_result.data:
+        if not repo_result or not repo_result.data:
             return
 
         user_id = repo_result.data["user_id"]

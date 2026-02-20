@@ -51,11 +51,11 @@ async def _process_event_async(event_id: str) -> dict[str, Any]:
         db.table("ugie_webhook_events")
         .select("*")
         .eq("event_id", event_id)
-        .single()
+        .maybe_single()
         .execute()
     )
 
-    if not result.data:
+    if not result or not result.data:
         logger.warning("Event not found in DB", extra={"event_id": event_id})
         return {"status": "not_found"}
 

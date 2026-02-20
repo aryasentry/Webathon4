@@ -97,7 +97,7 @@ def create_app() -> FastAPI:
         )
 
     # ── Routers ───────────────────────────────────────────────────────────────
-    from app.routers import analytics, auth, health, repos, webhooks, collaboration
+    from app.routers import analytics, auth, health, repos, webhooks, collaboration, ai, tasks
 
     app.include_router(health.router)          # /health/live, /health/ready, /metrics
     app.include_router(auth.router)            # /auth/*
@@ -105,6 +105,8 @@ def create_app() -> FastAPI:
     app.include_router(webhooks.router)        # /webhooks/github
     app.include_router(analytics.router)       # /analytics/*
     app.include_router(collaboration.router)   # /repos/{repo_id}/collaboration/*
+    app.include_router(ai.router)              # /ai/*
+    app.include_router(tasks.router)           # /tasks/*
 
     logger.info("All routers registered")
     return app

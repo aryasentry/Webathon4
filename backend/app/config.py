@@ -47,7 +47,7 @@ class Settings(BaseSettings):
     github_webhook_secret: str = Field(..., description="Secret used for HMAC webhook signatures")
     github_oauth_redirect_uri: str = "http://localhost:8000/auth/callback"
     github_oauth_scopes: str = "read:user,repo,read:org"
-    frontend_url: str = Field(default="http://localhost:3000", description="Frontend redirect URL")
+    frontend_url: str = Field(default="http://localhost:3001", description="Frontend redirect URL")
 
     # ── Token Vault ──────────────────────────────────────────────────────────
     token_encryption_key: str = Field(
@@ -61,12 +61,15 @@ class Settings(BaseSettings):
     jwt_algorithm: str = "HS256"
     jwt_expiry_minutes: int = 60 * 24 * 7  # 7 days
 
+    # ── Gemini AI ────────────────────────────────────────────────────────────
+    gemini_api_key: str = Field(default="", description="Google Gemini API key for AI chat")
+
     # ── Backfill ─────────────────────────────────────────────────────────────
     backfill_depth: int = 200  # default commit depth per repo
     backfill_max_concurrent: int = 5
 
     # ── CORS ─────────────────────────────────────────────────────────────────
-    cors_origins: list[str] = ["http://localhost:3000", "http://localhost:5173"]
+    cors_origins: list[str] = ["http://localhost:3000", "http://localhost:3001", "http://localhost:5173"]
 
     # ── Computed ─────────────────────────────────────────────────────────────
     @computed_field  # type: ignore[misc]

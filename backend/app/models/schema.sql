@@ -168,6 +168,60 @@ CREATE INDEX IF NOT EXISTS idx_ugie_webhook_events_event_id  ON ugie_webhook_eve
 CREATE INDEX IF NOT EXISTS idx_ugie_webhook_events_processed ON ugie_webhook_events(processed);
 CREATE INDEX IF NOT EXISTS idx_ugie_webhook_events_failed    ON ugie_webhook_events(failed);
 
+-- ─── tasks ────────────────────────────────────────────────────────────────────
+-- AI-created and manually-created project tasks
+CREATE TABLE IF NOT EXISTS ugie_tasks (
+    id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id             UUID REFERENCES ugie_users(id) ON DELETE SET NULL,
+    repo_id             UUID REFERENCES ugie_repositories(id) ON DELETE CASCADE,
+    -- Stores the frontend localStorage project UUID so tasks survive without a linked repo
+    frontend_project_id TEXT NOT NULL,
+    title               TEXT NOT NULL,
+    description         TEXT,
+    assignee            TEXT,                -- GitHub login or display name
+    priority            TEXT NOT NULL DEFAULT 'medium',  -- low | medium | high | critical
+    deadline            DATE,
+    tags                TEXT[] DEFAULT '{}',
+    status              TEXT NOT NULL DEFAULT 'todo',    -- todo | in-progress | done
+    story_points        INT NOT NULL DEFAULT 1,
+    created_by          TEXT,               -- GitHub login of the creator
+    source              TEXT NOT NULL DEFAULT 'manual',  -- manual | ai
+    -- Calendar: the day this task is planned/scheduled for (NULL = unscheduled)
+    scheduled_date      DATE,
+    created_at          TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at          TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_ugie_tasks_user_id     ON ugie_tasks(user_id);
+CREATE INDEX IF NOT EXISTS idx_ugie_tasks_project     ON ugie_tasks(frontend_project_id);
+CREATE INDEX IF NOT EXISTS idx_ugie_tasks_repo_id     ON ugie_tasks(repo_id);
+CREATE INDEX IF NOT EXISTS idx_ugie_tasks_status      ON ugie_tasks(status);
+CREATE INDEX IF NOT EXISTS idx_ugie_tasks_scheduled   ON ugie_tasks(scheduled_date) WHERE scheduled_date IS NOT NULL;
+
+-- Migration: add scheduled_date to existing deployments (safe to run multiple times)
+DO $$ BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_name='ugie_tasks' AND column_name='scheduled_date'
+    ) THEN
+        ALTER TABLE ugie_tasks ADD COLUMN scheduled_date DATE;
+        CREATE INDEX IF NOT EXISTS idx_ugie_tasks_scheduled
+            ON ugie_tasks(scheduled_date) WHERE scheduled_date IS NOT NULL;
+    END IF;
+END $$;
+
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_trigger
+        WHERE tgname = 'trg_ugie_tasks_updated_at'
+    ) THEN
+        CREATE TRIGGER trg_ugie_tasks_updated_at
+        BEFORE UPDATE ON ugie_tasks
+        FOR EACH ROW EXECUTE FUNCTION ugie_set_updated_at();
+    END IF;
+END $$;
+
 -- ─── health ping table (used by DB connectivity check) ───────────────────────
 CREATE TABLE IF NOT EXISTS ugie_health_ping (
     id SERIAL PRIMARY KEY
