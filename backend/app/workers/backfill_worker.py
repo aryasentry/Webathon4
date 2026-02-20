@@ -69,10 +69,10 @@ async def _backfill_repo_async(
             db.table("ugie_repositories")
             .select("owner_login,name,backfill_cursor,backfill_complete")
             .eq("id", repo_id)
-            .single()
+            .maybe_single()
             .execute()
         )
-        if not repo_result.data:
+        if not repo_result or not repo_result.data:
             logger.error("Repo not found", extra={"repo_id": repo_id})
             return {"status": "error", "reason": "repo_not_found"}
 

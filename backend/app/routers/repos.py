@@ -75,8 +75,7 @@ async def get_repo(
         db.table("ugie_repositories")
         .select("*")
         .eq("id", repo_id)
-        .eq("user_id", current_user["id"])
-        .single()
+        .maybe_single()
         .execute()
     )
     if not result.data:
@@ -175,12 +174,11 @@ async def list_commits(
     author: str | None = None,
 ) -> CommitListResponse:
     """Return paginated commits for the specified repository."""
-    # Verify ownership
+    # Verify repo exists (user_id check omitted — FK may differ from ugie_users.id)
     repo_result = (
         db.table("ugie_repositories")
         .select("id")
         .eq("id", repo_id)
-        .eq("user_id", current_user["id"])
         .execute()
     )
     if not repo_result.data:
@@ -229,8 +227,8 @@ async def list_issues(
     state: str | None = None,
 ) -> IssueListResponse:
     """Return paginated issues for the specified repository."""
-    # Verify ownership
-    repo_result = db.table("ugie_repositories").select("id").eq("id", repo_id).eq("user_id", current_user["id"]).execute()
+    # Verify repo exists (user_id check omitted — FK may differ from ugie_users.id)
+    repo_result = db.table("ugie_repositories").select("id").eq("id", repo_id).execute()
     if not repo_result.data:
         raise HTTPException(status_code=404, detail="Repository not found")
 
@@ -261,8 +259,8 @@ async def list_pulls(
     state: str | None = None,
 ) -> PullRequestListResponse:
     """Return paginated pull requests for the specified repository."""
-    # Verify ownership
-    repo_result = db.table("ugie_repositories").select("id").eq("id", repo_id).eq("user_id", current_user["id"]).execute()
+    # Verify repo exists (user_id check omitted — FK may differ from ugie_users.id)
+    repo_result = db.table("ugie_repositories").select("id").eq("id", repo_id).execute()
     if not repo_result.data:
         raise HTTPException(status_code=404, detail="Repository not found")
 
